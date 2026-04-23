@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CinemaCare Pro — Panel de Administración</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --electric: #00d4ff;
+    --success: #00e5a0;
+    --danger: #ff3860;
+    --warn: #ffa500;
+    --bg-void: #050608;
+    --bg-deep: #0a0c10;
+    --bg-surface: #0f1318;
+    --bg-panel: #141920;
+    --bg-card: #1a2130;
+    --border: rgba(0,212,255,0.12);
+    --border-bright: rgba(0,212,255,0.3);
+    --text-primary: #e8edf5;
+    --text-muted: #6b7a92;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg-void);
+    color: var(--text-primary);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .mono { font-family: 'Share Tech Mono', monospace; }
+  .section-label { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); }
+
+  .header { background: linear-gradient(135deg, #050810, #0a0f1a); border-bottom: 1px solid var(--border-bright); }
+  .logo-icon { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--electric), #0050aa); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 20px rgba(0,212,255,0.3); flex-shrink:0; }
+  .logo-text { font-family: 'Share Tech Mono', monospace; background: linear-gradient(135deg, var(--electric), #fff, var(--electric)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--electric), transparent); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--bg-panel); padding: 12px 16px; text-align: left; font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; color: var(--text-muted); border-bottom: 1px solid var(--border-bright); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:hover { background: rgba(0,212,255,0.03); }
+  tbody td { padding: 14px 16px; font-size: 0.85rem; vertical-align: middle; }
+  tbody tr:last-child { border-bottom: none; }
+
+  .pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-family: 'Share Tech Mono', monospace; letter-spacing: 0.08em; }
+  .pill-blue { background: rgba(0,212,255,0.1); color: var(--electric); border: 1px solid rgba(0,212,255,0.2); }
+  .pill-green { background: rgba(0,229,160,0.1); color: var(--success); border: 1px solid rgba(0,229,160,0.2); }
+  .pill-red { background: rgba(255,56,96,0.1); color: var(--danger); border: 1px solid rgba(255,56,96,0.2); }
+  .pill-warn { background: rgba(255,165,0,0.1); color: var(--warn); border: 1px solid rgba(255,165,0,0.2); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+  .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.4; }
+
+  .btn-refresh { background: rgba(0,212,255,0.08); border: 1px solid var(--border-bright); color: var(--electric); border-radius: 10px; padding: 8px 16px; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; letter-spacing: 0.08em; }
+  .btn-refresh:hover { background: rgba(0,212,255,0.15); }
+
+  .photo-link { color: var(--electric); text-decoration: none; font-size: 0.75rem; }
+  .photo-link:hover { text-decoration: underline; }
+
+  .filter-btn { padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; font-family: 'Share Tech Mono', monospace; cursor: pointer; transition: all 0.2s; letter-spacing: 0.06em; border: 1px solid var(--border); background: transparent; color: var(--text-muted); }
+  .filter-btn.active { background: rgba(0,212,255,0.1); border-color: var(--border-bright); color: var(--electric); }
+</style>
+</head>
+
+<body>
+<!-- HEADER -->
+<header class="header px-6 py-4">
+  <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="logo-icon">🎬</div>
+      <div>
+        <div class="logo-text text-lg font-black tracking-wider">CINEMACARE PRO</div>
+        <div class="section-label" style="font-size:0.6rem; color:rgba(0,212,255,0.5);">PANEL DE ADMINISTRACIÓN · INCIDENTES</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap justify-end">
+      <button class="btn-refresh" onclick="location.reload()">↻ ACTUALIZAR</button>
+      {% if incidents %}
+      <a href="/api/report/all" target="_blank"
+         class="btn-refresh"
+         style="background:rgba(0,229,160,0.1); border-color:rgba(0,229,160,0.4); color:#00e5a0; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+        📄 DESCARGAR REPORTE PDF COMPLETO
+      </a>
+      {% endif %}
+      <a href="/" class="btn-refresh" style="text-decoration:none;">← VOLVER</a>
+    </div>
+  </div>
+</header>
+
+<!-- STATS -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+  {% set total = incidents|length %}
+  {% set escalados = incidents|selectattr('escalado', 'defined')|selectattr('escalado')|list|length %}
+  {% set resueltos = total - escalados %}
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+    <!-- Total -->
+    <div class="stat-card">
+      <div class="section-label mb-2">TOTAL INCIDENTES</div>
+      <div class="text-3xl font-black mono" style="color:var(--electric)">{{ total }}</div>
+      <div class="text-xs mt-1" style="color:var(--text-muted)">Registros totales</div>
+    </div>
+    <!-- Resueltos -->
+    <div class="stat-card" style="--card-color: var(--success);">
+      <div class="section-label mb-2">RESUELTOS</div>
+      <div class="text-3xl font-black mono" style="color:var(--success)">{{ resueltos }}</div>
+      <div class="text-xs mt-1" style="color:var(--text-muted)">Staff resolvió</div>
+    </div>
+    <!-- Escalados -->
+    <div class="stat-card">
+      <div class="section-label mb-2">ESCALADOS</div>
+      <div class="text-3xl font-black mono" style="color:var(--danger)">{{ escalados }}</div>
+      <div class="text-xs mt-1" style="color:var(--text-muted)">Requirieron técnico</div>
+    </div>
+    <!-- Tasa de resolución -->
+    <div class="stat-card">
+      <div class="section-label mb-2">TASA RESOLUCIÓN</div>
+      <div class="text-3xl font-black mono" style="color:var(--warn)">
+        {% if total > 0 %}{{ ((resueltos / total) * 100)|round|int }}%{% else %}—{% endif %}
+      </div>
+      <div class="text-xs mt-1" style="color:var(--text-muted)">Sin técnico externo</div>
+    </div>
+  </div>
+
+  <!-- TABLE HEADER -->
+  <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+    <h2 class="font-bold text-lg" style="color:var(--text-primary)">Registro de Incidentes</h2>
+    <div class="flex gap-2">
+      <button class="filter-btn active" onclick="filterTable('all', this)">TODOS</button>
+      <button class="filter-btn" onclick="filterTable('resolved', this)">RESUELTOS</button>
+      <button class="filter-btn" onclick="filterTable('escalated', this)">ESCALADOS</button>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="rounded-2xl overflow-hidden" style="background:var(--bg-card); border:1px solid var(--border);">
+    {% if incidents %}
+    <div class="overflow-x-auto">
+      <table id="incidentsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>ESTADO</th>
+            <th>ERROR</th>
+            <th>SALA</th>
+            <th>TÉCNICO</th>
+            <th>PASO RESOLUCIÓN</th>
+            <th>FECHA</th>
+            <th>EVIDENCIA</th>
+            <th>NOTAS</th>
+            <th>PDF</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inc in incidents %}
+          <tr data-type="{{ 'escalated' if inc.get('escalado') else 'resolved' }}">
+            <td>
+              <span class="mono text-xs" style="color:var(--electric)">#{{ inc.id }}</span>
+            </td>
+            <td>
+              {% if inc.get('escalado') %}
+                <span class="pill pill-red">⚡ ESCALADO</span>
+              {% else %}
+                <span class="pill pill-green">✓ RESUELTO</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="flex flex-col gap-1">
+                <span class="pill pill-blue">{{ inc.error_codigo }}</span>
+                <span class="text-xs" style="color:var(--text-muted); max-width:160px; line-height:1.4;">{{ inc.error_nombre }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="font-semibold" style="color:var(--text-primary)">{{ inc.sala }}</span>
+            </td>
+            <td>
+              <span style="color:var(--text-muted)">{{ inc.tecnico }}</span>
+            </td>
+            <td>
+              {% if inc.get('escalado') %}
+                <span style="color:var(--danger); font-size:0.8rem;">Todos los pasos agotados</span>
+              {% else %}
+                <div>
+                  <div class="font-bold" style="color:var(--success); font-size:0.8rem;">Paso {{ inc.paso_resolucion }}</div>
+                  <div class="text-xs" style="color:var(--text-muted); max-width:150px; line-height:1.4;">{{ inc.titulo_paso }}</div>
+                </div>
+              {% endif %}
+            </td>
+            <td>
+              <span class="mono text-xs" style="color:var(--text-muted)">{{ inc.fecha }}</span>
+            </td>
+            <td>
+              {% if inc.photo_url %}
+                <a href="{{ inc.photo_url }}" target="_blank" class="photo-link">📷 Ver foto</a>
+              {% else %}
+                <span style="color:var(--text-dim); font-size:0.75rem;">Sin foto</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="text-xs" style="color:var(--text-muted); max-width:140px; display:block; line-height:1.4;">
+                {{ inc.notas[:60] + '...' if inc.notas and inc.notas|length > 60 else inc.notas or '—' }}
+              </span>
+            </td>
+            <td>
+              <a href="/api/report/incident/{{ inc.id }}" target="_blank"
+                 class="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-mono"
+                 style="background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.2);
+                        color:var(--electric); text-decoration:none; white-space:nowrap;">
+                📄 PDF
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="section-label mb-2">SIN INCIDENTES REGISTRADOS</div>
+      <p style="font-size:0.85rem; color:var(--text-muted);">Los incidentes aparecerán aquí cuando el staff resuelva o escale fallas técnicas.</p>
+      <a href="/" style="display:inline-block; margin-top:20px; color:var(--electric); font-size:0.85rem; text-decoration:none;">→ Ir al diagnóstico</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- FOOTER NOTE -->
+  <div class="mt-6 text-center">
+    <p class="text-xs" style="color:var(--text-dim);">CinemaCare Pro v2.1 · Panel actualizado en tiempo real · <a href="/" style="color:var(--electric); text-decoration:none;">← Volver al diagnóstico</a></p>
+  </div>
+</div>
+
+<script>
+function filterTable(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#incidentsTable tbody tr').forEach(row => {
+    if (type === 'all') row.style.display = '';
+    else row.style.display = row.dataset.type === type ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

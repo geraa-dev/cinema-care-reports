@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CinemaCare Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --electric: #00d4ff;
+    --electric-dim: #0099bb;
+    --glow: rgba(0,212,255,0.15);
+    --danger: #ff3860;
+    --success: #00e5a0;
+    --warn: #ffa500;
+    --bg-void: #050608;
+    --bg-deep: #0a0c10;
+    --bg-surface: #0f1318;
+    --bg-panel: #141920;
+    --bg-card: #1a2130;
+    --border: rgba(0,212,255,0.12);
+    --border-bright: rgba(0,212,255,0.35);
+    --text-primary: #e8edf5;
+    --text-muted: #6b7a92;
+    --text-dim: #3d4a5c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-void);
+    color: var(--text-primary);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #050810 0%, #0a0f1a 100%);
+    border-bottom: 1px solid var(--border-bright);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--electric), transparent);
+    animation: scanH 4s ease-in-out infinite;
+  }
+  @keyframes scanH {
+    0%, 100% { opacity: 0.3; transform: scaleX(0.3); }
+    50% { opacity: 1; transform: scaleX(1); }
+  }
+
+  .logo-text {
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--electric) 0%, #ffffff 50%, var(--electric) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── GLOW PULSE ON LOGO ── */
+  .logo-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--electric), #0050aa);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 0 20px rgba(0,212,255,0.4), 0 0 60px rgba(0,212,255,0.1);
+    animation: logoPulse 3s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes logoPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(0,212,255,0.4), 0 0 60px rgba(0,212,255,0.1); }
+    50% { box-shadow: 0 0 30px rgba(0,212,255,0.7), 0 0 80px rgba(0,212,255,0.2); }
+  }
+
+  /* ── SEARCH BOX ── */
+  .search-container {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .search-container:focus-within {
+    border-color: var(--electric);
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.1), 0 0 30px rgba(0,212,255,0.08);
+  }
+  .search-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    width: 100%;
+  }
+  .search-input::placeholder { color: var(--text-dim); }
+
+  /* ── DROPDOWN ── */
+  .dropdown {
+    background: var(--bg-card);
+    border: 1px solid var(--border-bright);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(0,212,255,0.05);
+    overflow: hidden;
+    animation: dropIn 0.2s ease;
+  }
+  @keyframes dropIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .dropdown-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .dropdown-item:last-child { border-bottom: none; }
+  .dropdown-item:hover, .dropdown-item:active {
+    background: rgba(0,212,255,0.08);
+    border-left: 3px solid var(--electric);
+  }
+  .error-code-badge {
+    font-family: 'Share Tech Mono', monospace;
+    background: rgba(0,212,255,0.12);
+    color: var(--electric);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── INPUT FIELDS ── */
+  .field-input {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-family: 'Exo 2', sans-serif;
+    padding: 12px 14px;
+    width: 100%;
+    outline: none;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field-input:focus {
+    border-color: var(--electric);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.1);
+  }
+
+  /* ── STEP CARD ── */
+  .step-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: stepReveal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes stepReveal {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .step-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--electric), transparent);
+  }
+
+  /* ── STEP NUMBER ── */
+  .step-number {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--electric), #0077cc);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    font-weight: bold;
+    box-shadow: 0 0 20px rgba(0,212,255,0.3);
+    flex-shrink: 0;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-track {
+    background: var(--bg-surface);
+    border-radius: 999px;
+    height: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--electric), #0077ff);
+    border-radius: 999px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 10px rgba(0,212,255,0.5);
+  }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    background: linear-gradient(135deg, #0077cc, #005599);
+    border: 1px solid rgba(0,212,255,0.3);
+    color: white;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%;
+  }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:hover { background: linear-gradient(135deg, #0088ee, #0066aa); box-shadow: 0 4px 20px rgba(0,120,200,0.4); }
+
+  .btn-success {
+    background: linear-gradient(135deg, #006644, #004d33);
+    border: 1px solid rgba(0,229,160,0.4);
+    color: var(--success);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%;
+  }
+  .btn-success:active { transform: scale(0.97); }
+  .btn-success:hover { box-shadow: 0 4px 20px rgba(0,229,160,0.3); background: linear-gradient(135deg, #008855, #006644); }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #8b0000, #660000);
+    border: 1px solid rgba(255,56,96,0.4);
+    color: #ff6b8a;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%;
+  }
+  .btn-danger:active { transform: scale(0.97); }
+  .btn-danger:hover { box-shadow: 0 4px 20px rgba(255,56,96,0.3); }
+
+  .btn-upload {
+    background: var(--bg-surface);
+    border: 1px dashed var(--border-bright);
+    color: var(--electric);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%;
+  }
+  .btn-upload:hover { background: rgba(0,212,255,0.05); border-color: var(--electric); }
+
+  .btn-escalate {
+    background: linear-gradient(135deg, #7a0000, #a00000);
+    border: 2px solid #ff3860;
+    color: white;
+    border-radius: 16px;
+    padding: 18px 24px;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%;
+    text-transform: uppercase;
+    animation: escalatePulse 2s ease-in-out infinite;
+  }
+  @keyframes escalatePulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(255,56,96,0.3); }
+    50% { box-shadow: 0 0 40px rgba(255,56,96,0.6), 0 0 80px rgba(255,56,96,0.2); }
+  }
+  .btn-escalate:active { transform: scale(0.97); }
+
+  /* ── PHOTO PREVIEW ── */
+  .photo-preview {
+    background: var(--bg-surface);
+    border: 1px solid var(--success);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex; align-items: center; gap: 10px;
+    animation: fadeIn 0.3s ease;
+  }
+  .photo-thumb {
+    width: 48px; height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+    background: var(--bg-card);
+    border: 1px solid var(--border-bright);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 9999;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    display: flex; align-items: center; gap: 10px;
+    max-width: calc(100vw - 32px);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── SUCCESS SCREEN ── */
+  .success-screen {
+    text-align: center;
+    animation: successReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes successReveal {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .success-icon {
+    font-size: 5rem;
+    animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+    display: block;
+  }
+  @keyframes bounceIn {
+    from { transform: scale(0) rotate(-20deg); }
+    to { transform: scale(1) rotate(0deg); }
+  }
+  .confetti-ring {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 3px solid var(--success);
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 40px rgba(0,229,160,0.3), inset 0 0 40px rgba(0,229,160,0.05);
+    animation: ringGlow 2s ease-in-out infinite;
+  }
+  @keyframes ringGlow {
+    0%, 100% { box-shadow: 0 0 40px rgba(0,229,160,0.3), inset 0 0 40px rgba(0,229,160,0.05); }
+    50% { box-shadow: 0 0 60px rgba(0,229,160,0.6), inset 0 0 60px rgba(0,229,160,0.1); }
+  }
+
+  /* ── SECTION LABELS ── */
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ── MISC ── */
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  .fade-in { animation: fadeIn 0.4s ease; }
+  .hidden { display: none !important; }
+
+  /* ── GRID BACKGROUND ── */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ── STATUS PILL ── */
+  .pill {
+    display: inline-flex; align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .pill-blue { background: rgba(0,212,255,0.1); color: var(--electric); border: 1px solid rgba(0,212,255,0.2); }
+  .pill-green { background: rgba(0,229,160,0.1); color: var(--success); border: 1px solid rgba(0,229,160,0.2); }
+</style>
+</head>
+
+<body class="grid-bg">
+
+<!-- ── TOAST ─────────────────────────────────────────────────────────────── -->
+<div id="toast" class="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastMsg">Mensaje</span>
+</div>
+
+<!-- ── HEADER ─────────────────────────────────────────────────────────────── -->
+<header class="header px-4 py-4">
+  <div class="max-w-lg mx-auto flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="logo-icon">🎬</div>
+      <div class="min-w-0">
+        <div class="logo-text text-lg font-black tracking-wider">CINEMACARE</div>
+        <div class="section-label" style="color:rgba(0,212,255,0.5); font-size:0.6rem; letter-spacing:0.25em;">PRO · SOPORTE TÉCNICO v2.1</div>
+      </div>
+    </div>
+    <a href="/admin" class="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono tracking-wider"
+       style="background:rgba(0,212,255,0.06); border:1px solid var(--border-bright); color:var(--electric);">
+      <span>⚙</span><span class="hidden sm:inline">ADMIN</span>
+    </a>
+  </div>
+</header>
+
+<!-- ── MAIN ───────────────────────────────────────────────────────────────── -->
+<main class="max-w-lg mx-auto px-4 py-6 pb-24">
+
+  <!-- PHASE 1: SETUP ─────────────────────────────────────────────────── -->
+  <section id="phaseSetup">
+
+    <!-- Welcome Banner -->
+    <div class="mb-6 p-4 rounded-2xl" style="background: linear-gradient(135deg, rgba(0,212,255,0.06) 0%, rgba(0,80,170,0.06) 100%); border: 1px solid var(--border);">
+      <div class="section-label mb-1" style="color:var(--electric)">SISTEMA ACTIVO</div>
+      <p class="text-sm" style="color:var(--text-muted); line-height:1.6;">Resuelve fallas técnicas paso a paso. Sube evidencia fotográfica y ahorra llamadas al técnico externo.</p>
+    </div>
+
+    <!-- Sala y Técnico -->
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div>
+        <label class="section-label block mb-2">SALA / AUDITORIUM</label>
+        <input id="inputSala" type="text" class="field-input" placeholder="Ej: Sala 3" maxlength="20">
+      </div>
+      <div>
+        <label class="section-label block mb-2">TU NOMBRE</label>
+        <input id="inputTecnico" type="text" class="field-input" placeholder="Ej: Carlos M." maxlength="30">
+      </div>
+    </div>
+
+    <!-- Buscador de Errores -->
+    <div class="mb-2">
+      <label class="section-label block mb-2">BUSCAR CÓDIGO DE ERROR</label>
+      <div class="search-container p-3 flex items-center gap-3">
+        <span style="color:var(--electric); font-size:1.1rem; flex-shrink:0;">⚡</span>
+        <input id="searchInput" type="text" class="search-input"
+               placeholder="Escribe código o descripción..." autocomplete="off"
+               inputmode="text">
+      </div>
+    </div>
+
+    <!-- Dropdown Resultados -->
+    <div id="searchDropdown" class="dropdown hidden mb-4"></div>
+
+    <!-- Error Seleccionado -->
+    <div id="selectedError" class="hidden mb-6 p-4 rounded-2xl fade-in"
+         style="background: rgba(0,212,255,0.05); border: 1px solid var(--border-bright);">
+      <div class="section-label mb-1" style="color:var(--electric)">ERROR SELECCIONADO</div>
+      <div class="flex items-center gap-3 mt-2">
+        <span id="selectedCode" class="error-code-badge text-base">---</span>
+        <span id="selectedName" class="text-sm font-semibold" style="color:var(--text-primary)"></span>
+      </div>
+    </div>
+
+    <!-- Start Button -->
+    <button id="btnStart" class="btn-primary hidden" onclick="startDiagnosis()">
+      <span>🔍</span>
+      <span>INICIAR DIAGNÓSTICO</span>
+    </button>
+
+    <!-- Error Codes Reference -->
+    <div class="mt-8">
+      <div class="section-label mb-3">CÓDIGOS FRECUENTES</div>
+      <div id="errorRefList" class="space-y-2"></div>
+    </div>
+
+  </section>
+
+  <!-- PHASE 2: DIAGNOSIS STEPS ───────────────────────────────────────── -->
+  <section id="phaseDiagnosis" class="hidden">
+
+    <!-- Incident Header -->
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <div class="section-label" style="color:var(--electric)">DIAGNÓSTICO ACTIVO</div>
+        <h2 id="diagErrorName" class="font-bold text-lg mt-1" style="color:var(--text-primary)"></h2>
+        <div class="flex items-center gap-2 mt-1">
+          <span id="diagErrorCode" class="error-code-badge"></span>
+          <span id="diagSala" class="section-label" style="font-size:0.7rem"></span>
+        </div>
+      </div>
+      <button onclick="resetAll()" class="flex-shrink-0 text-xs px-3 py-2 rounded-xl"
+              style="background:rgba(255,56,96,0.08); border:1px solid rgba(255,56,96,0.2); color:#ff6b8a;">
+        ✕ CANCELAR
+      </button>
+    </div>
+
+    <!-- Progress -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center mb-2">
+        <span class="section-label">PROGRESO</span>
+        <span id="progressText" class="section-label" style="color:var(--electric)">Paso 1 de N</span>
+      </div>
+      <div class="progress-track">
+        <div id="progressFill" class="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Step Card -->
+    <div id="stepCard" class="step-card p-5 mb-4">
+      <!-- Step Header -->
+      <div class="flex items-center gap-3 mb-4">
+        <div class="step-number" id="stepNum">1</div>
+        <div>
+          <div class="section-label mb-0.5">PASO DE DIAGNÓSTICO</div>
+          <h3 id="stepTitle" class="font-bold" style="color:var(--text-primary); font-size:1rem; line-height:1.3"></h3>
+        </div>
+      </div>
+
+      <!-- Step Description -->
+      <div class="p-4 rounded-xl mb-4" style="background:var(--bg-surface); border:1px solid var(--border);">
+        <p id="stepDesc" class="text-sm leading-relaxed" style="color:#c5d0e0; line-height:1.7;"></p>
+      </div>
+
+      <!-- Tool Required -->
+      <div id="toolRequired" class="flex items-center gap-2 mb-4 p-3 rounded-xl"
+           style="background:rgba(255,165,0,0.06); border:1px solid rgba(255,165,0,0.15);">
+        <span style="color:var(--warn)">🔧</span>
+        <div>
+          <div class="section-label" style="color:var(--warn); font-size:0.65rem;">HERRAMIENTA / ACCESO NECESARIO</div>
+          <span id="toolText" class="text-xs" style="color:#d4a04a;"></span>
+        </div>
+      </div>
+
+      <!-- Photo Upload -->
+      <div class="mb-4">
+        <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoSelect(this)">
+        <button class="btn-upload" onclick="document.getElementById('photoInput').click()">
+          <span>📷</span>
+          <span>SUBIR FOTO EVIDENCIA</span>
+        </button>
+        <div id="photoPreview" class="hidden mt-3"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid gap-3">
+        <button class="btn-success" onclick="markSolved()">
+          <span>✅</span>
+          <span>¡SOLUCIONADO!</span>
+        </button>
+        <button id="btnNextStep" class="btn-primary" onclick="nextStep()">
+          <span>▶</span>
+          <span>SIGUIENTE PASO</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="mb-4">
+      <label class="section-label block mb-2">NOTAS DEL TÉCNICO (OPCIONAL)</label>
+      <textarea id="notasInput" class="field-input" rows="2" placeholder="Observaciones adicionales..."></textarea>
+    </div>
+
+  </section>
+
+  <!-- PHASE 3: ESCALATE ──────────────────────────────────────────────── -->
+  <section id="phaseEscalate" class="hidden">
+    <div class="step-card p-6 text-center mb-4" style="border-color: rgba(255,56,96,0.3);">
+      <div class="section-label mb-3" style="color:var(--danger)">⚠ TODOS LOS PASOS AGOTADOS</div>
+      <p class="text-sm mb-6" style="color:var(--text-muted); line-height:1.7;">
+        Has completado todos los pasos de diagnóstico sin resolver la falla.<br>
+        Es necesario escalar al equipo técnico especializado.
+      </p>
+      <div class="p-4 rounded-xl mb-6" style="background:rgba(255,56,96,0.06); border:1px solid rgba(255,56,96,0.15);">
+        <div class="section-label mb-2" style="color:var(--danger); font-size:0.65rem;">RESUMEN DEL INCIDENTE</div>
+        <div id="escalateSummary" class="text-sm" style="color:var(--text-muted); text-align:left; line-height:1.8;"></div>
+      </div>
+      <button class="btn-escalate" onclick="sendEscalation()">
+        <span>🚨</span>
+        <span>SOLICITAR TÉCNICO SENIOR</span>
+      </button>
+    </div>
+    <button onclick="resetAll()" class="btn-primary" style="background: linear-gradient(135deg, #1a2130, #0f1318);">
+      <span>↩</span> <span>VOLVER AL INICIO</span>
+    </button>
+  </section>
+
+  <!-- PHASE 4: SUCCESS ───────────────────────────────────────────────── -->
+  <section id="phaseSuccess" class="hidden">
+    <div class="success-screen p-8">
+      <div class="confetti-ring">
+        <span class="success-icon">✅</span>
+      </div>
+      <h2 class="text-2xl font-black mb-2" style="color:var(--success)">¡PROBLEMA RESUELTO!</h2>
+      <p id="successSubtext" class="text-sm mb-6" style="color:var(--text-muted); line-height:1.7;"></p>
+      <div id="successCard" class="p-4 rounded-2xl mb-6 text-left"
+           style="background:rgba(0,229,160,0.06); border:1px solid rgba(0,229,160,0.2);">
+        <div id="successDetails" class="text-sm space-y-1" style="color:var(--text-muted);"></div>
+      </div>
+      <button onclick="resetAll()" class="btn-success">
+        <span>🔄</span>
+        <span>NUEVO DIAGNÓSTICO</span>
+      </button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── SCRIPTS ─────────────────────────────────────────────────────────────── -->
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let state = {
+  allErrors: [],
+  selected: null,    // { codigo, nombre, pasos[] }
+  currentStep: 0,
+  sala: '',
+  tecnico: '',
+  photoB64: null,
+  photoName: null,
+  incident_id: null  // ✅ Guardamos el ID del incidente para actualizarlo en cada paso
+};
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadErrors();
+  renderErrorRef();
+  setupSearch();
+});
+
+async function loadErrors() {
+  try {
+    const r = await fetch('/api/errors');
+    state.allErrors = await r.json();
+  } catch(e) {
+    showToast('⚠ Sin conexión al servidor', 'warn');
+  }
+}
+
+// ── SEARCH ─────────────────────────────────────────────────────────────────
+function setupSearch() {
+  const input = document.getElementById('searchInput');
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) { document.getElementById('searchDropdown').classList.add('hidden'); return; }
+    const matches = state.allErrors.filter(e =>
+      e.codigo.toLowerCase().includes(q) || e.nombre.toLowerCase().includes(q) || e.categoria.toLowerCase().includes(q)
+    );
+    renderDropdown(matches);
+  });
+
+  // Close dropdown on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#searchInput') && !e.target.closest('#searchDropdown')) {
+      document.getElementById('searchDropdown').classList.add('hidden');
+    }
+  });
+}
+
+function renderDropdown(matches) {
+  const dd = document.getElementById('searchDropdown');
+  if (!matches.length) {
+    dd.innerHTML = `<div class="dropdown-item" style="color:var(--text-muted);">Sin resultados para este término</div>`;
+    dd.classList.remove('hidden');
+    return;
+  }
+  dd.innerHTML = matches.map(e => `
+    <div class="dropdown-item" onclick="selectError('${e.codigo}')">
+      <div class="flex items-center gap-3">
+        <span class="error-code-badge">${e.codigo}</span>
+        <div>
+          <div class="text-sm font-semibold" style="color:var(--text-primary)">${e.nombre}</div>
+          <div class="text-xs" style="color:var(--text-muted)">${e.categoria}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  dd.classList.remove('hidden');
+}
+
+async function selectError(code) {
+  document.getElementById('searchDropdown').classList.add('hidden');
+  document.getElementById('searchInput').value = code;
+
+  try {
+    const r = await fetch(`/api/error/${code}`);
+    const data = await r.json();
+    state.selected = data;
+
+    document.getElementById('selectedError').classList.remove('hidden');
+    document.getElementById('selectedCode').textContent = data.codigo;
+    document.getElementById('selectedName').textContent = data.nombre;
+    document.getElementById('btnStart').classList.remove('hidden');
+  } catch(e) {
+    showToast('⚠ Error al cargar los pasos', 'warn');
+  }
+}
+
+// ── REFERENCE LIST ─────────────────────────────────────────────────────────
+function renderErrorRef() {
+  const container = document.getElementById('errorRefList');
+  // Will be populated after load
+  setTimeout(() => {
+    if (!state.allErrors.length) return;
+    container.innerHTML = state.allErrors.map(e => `
+      <div class="dropdown-item rounded-xl cursor-pointer"
+           style="background:var(--bg-card); border:1px solid var(--border);"
+           onclick="selectError('${e.codigo}'); document.getElementById('searchInput').value='${e.codigo}';">
+        <div class="flex items-center gap-3">
+          <span class="error-code-badge">${e.codigo}</span>
+          <div>
+            <div class="text-sm font-semibold" style="color:var(--text-primary)">${e.nombre}</div>
+            <div class="text-xs" style="color:var(--text-muted)">${e.categoria}</div>
+          </div>
+          <span style="color:var(--text-dim); margin-left:auto;">›</span>
+        </div>
+      </div>
+    `).join('');
+  }, 400);
+}
+
+// ── START DIAGNOSIS ─────────────────────────────────────────────────────────
+function startDiagnosis() {
+  state.sala = document.getElementById('inputSala').value.trim() || 'Sin especificar';
+  state.tecnico = document.getElementById('inputTecnico').value.trim() || 'Anónimo';
+  state.currentStep = 0;
+  state.photoB64 = null;
+
+  showPhase('phaseDiagnosis');
+  renderStep();
+}
+
+// ── RENDER STEP ─────────────────────────────────────────────────────────────
+function renderStep() {
+  const pasos = state.selected.pasos;
+  const paso = pasos[state.currentStep];
+  const total = pasos.length;
+  const stepNum = state.currentStep + 1;
+
+  // Clear photo
+  state.photoB64 = null;
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoPreview').classList.add('hidden');
+  document.getElementById('photoPreview').innerHTML = '';
+
+  // Update header
+  document.getElementById('diagErrorName').textContent = state.selected.nombre;
+  document.getElementById('diagErrorCode').textContent = state.selected.codigo;
+  document.getElementById('diagSala').textContent = `SALA: ${state.sala} · ${state.tecnico}`;
+
+  // Progress
+  const pct = Math.round((stepNum / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `Paso ${stepNum} de ${total}`;
+
+  // Step content
+  document.getElementById('stepNum').textContent = stepNum;
+  document.getElementById('stepTitle').textContent = paso.titulo;
+  document.getElementById('stepDesc').textContent = paso.descripcion;
+  document.getElementById('toolText').textContent = paso.herramienta;
+
+  // Last step: hide "Siguiente Paso" to show escalate path
+  const btnNext = document.getElementById('btnNextStep');
+  if (state.currentStep === total - 1) {
+    btnNext.innerHTML = `<span>🚨</span><span>NO SE SOLUCIONÓ — VER OPCIONES</span>`;
+    btnNext.style.background = 'linear-gradient(135deg, #440000, #330000)';
+    btnNext.style.borderColor = 'rgba(255,56,96,0.3)';
+    btnNext.style.color = '#ff6b8a';
+  } else {
+    btnNext.innerHTML = `<span>▶</span><span>SIGUIENTE PASO</span>`;
+    btnNext.style.background = '';
+    btnNext.style.borderColor = '';
+    btnNext.style.color = '';
+  }
+
+  // Animate card
+  const card = document.getElementById('stepCard');
+  card.style.animation = 'none';
+  card.offsetHeight; // reflow
+  card.style.animation = 'stepReveal 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+}
+
+// ── PHOTO ───────────────────────────────────────────────────────────────────
+function handlePhotoSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    state.photoB64 = e.target.result;
+    state.photoName = file.name;
+    const preview = document.getElementById('photoPreview');
+    preview.classList.remove('hidden');
+    preview.innerHTML = `
+      <div class="photo-preview">
+        <img src="${e.target.result}" class="photo-thumb" alt="Evidencia">
+        <div>
+          <div class="text-xs font-semibold" style="color:var(--success)">✓ Foto cargada</div>
+          <div class="text-xs" style="color:var(--text-muted)">${file.name}</div>
+        </div>
+        <button onclick="clearPhoto()" class="ml-auto text-xs" style="color:var(--danger)">✕</button>
+      </div>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPhoto() {
+  state.photoB64 = null;
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoPreview').classList.add('hidden');
+}
+
+// ── MARK SOLVED ─────────────────────────────────────────────────────────────
+async function markSolved() {
+  const paso = state.selected.pasos[state.currentStep];
+  const payload = {
+    incident_id: state.incident_id, // ✅ Enviamos el ID existente
+    error_codigo: state.selected.codigo,
+    error_nombre: state.selected.nombre,
+    sala: state.sala,
+    tecnico: state.tecnico,
+    paso_resolucion: state.currentStep + 1,
+    titulo_paso: paso.titulo,
+    photo_b64: state.photoB64,
+    notas: document.getElementById('notasInput').value
+  };
+
+  try {
+    const r = await fetch('/api/resolve', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json();
+
+    // ✅ Guardamos el ID del incidente para siguientes pasos
+    if (!state.incident_id) {
+      state.incident_id = data.incident_id;
+    }
+
+    // Show success
+    document.getElementById('successSubtext').textContent =
+      `La falla se resolvió en el Paso ${state.currentStep + 1}: "${paso.titulo}". El registro fue guardado correctamente.`;
+    document.getElementById('successDetails').innerHTML = `
+      <div class="flex justify-between"><span>Incidente ID:</span> <span class="font-mono" style="color:var(--electric)">#${data.incident_id}</span></div>
+      <div class="flex justify-between"><span>Error:</span> <span>${state.selected.codigo}</span></div>
+      <div class="flex justify-between"><span>Sala:</span> <span>${state.sala}</span></div>
+      <div class="flex justify-between"><span>Técnico:</span> <span>${state.tecnico}</span></div>
+      <div class="flex justify-between"><span>Paso:</span> <span>${state.currentStep + 1} — ${paso.titulo}</span></div>
+    `;
+    showPhase('phaseSuccess');
+  } catch(e) {
+    showToast('⚠ Error al guardar el registro', 'warn');
+  }
+}
+
+// ── NEXT STEP ───────────────────────────────────────────────────────────────
+async function nextStep() {
+  // ✅ PRIMERO guardamos la foto del paso actual ANTES de avanzar
+  if (state.photoB64) {
+    const paso = state.selected.pasos[state.currentStep];
+    const payload = {
+      incident_id: state.incident_id,
+      error_codigo: state.selected.codigo,
+      error_nombre: state.selected.nombre,
+      sala: state.sala,
+      tecnico: state.tecnico,
+      paso_resolucion: state.currentStep + 1,
+      titulo_paso: paso.titulo,
+      photo_b64: state.photoB64,
+      notas: document.getElementById('notasInput').value
+    };
+
+    try {
+      const r = await fetch('/api/resolve', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await r.json();
+      
+      // ✅ Guardamos el ID del incidente
+      if (!state.incident_id) {
+        state.incident_id = data.incident_id;
+      }
+
+      showToast(`✅ Foto guardada correctamente (${data.photos_count} fotos)`, 'success');
+    } catch(e) {
+      showToast('⚠ Error guardando la foto', 'warn');
+    }
+  }
+
+  const total = state.selected.pasos.length;
+  if (state.currentStep < total - 1) {
+    state.currentStep++;
+    renderStep();
+  } else {
+    // All steps exhausted → escalate
+    const summary = `
+      <div class="space-y-1">
+        <div><span style="color:var(--text-dim)">Error:</span> ${state.selected.codigo} — ${state.selected.nombre}</div>
+        <div><span style="color:var(--text-dim)">Sala:</span> ${state.sala}</div>
+        <div><span style="color:var(--text-dim)">Técnico:</span> ${state.tecnico}</div>
+        <div><span style="color:var(--text-dim)">Pasos ejecutados:</span> ${total} de ${total}</div>
+        <div><span style="color:var(--text-dim)">Resultado:</span> <span style="color:var(--danger)">Sin resolución</span></div>
+      </div>`;
+    document.getElementById('escalateSummary').innerHTML = summary;
+    showPhase('phaseEscalate');
+  }
+}
+
+// ── ESCALATE ────────────────────────────────────────────────────────────────
+async function sendEscalation() {
+  const payload = {
+    incident_id: state.incident_id, // ✅ AGREGADO: Enviamos el ID para copiar las fotos
+    error_codigo: state.selected.codigo,
+    error_nombre: state.selected.nombre,
+    sala: state.sala,
+    tecnico: state.tecnico,
+    photo_b64: state.photoB64,
+    notas: `Todos los ${state.selected.pasos.length} pasos ejecutados sin resolución. ${document.getElementById('notasInput').value}`
+  };
+
+  try {
+    const r = await fetch('/api/escalate', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const data = await r.json();
+    showToast('🚨 Técnico senior notificado — ID #' + data.incident_id, 'danger');
+    setTimeout(() => resetAll(), 2000);
+  } catch(e) {
+    showToast('⚠ Error al enviar el reporte', 'warn');
+  }
+}
+
+// ── UTILITIES ───────────────────────────────────────────────────────────────
+function showPhase(id) {
+  ['phaseSetup','phaseDiagnosis','phaseEscalate','phaseSuccess'].forEach(p => {
+    document.getElementById(p).classList.add('hidden');
+  });
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetAll() {
+  state.selected = null;
+  state.currentStep = 0;
+  state.photoB64 = null;
+  state.incident_id = null;
+  document.getElementById('searchInput').value = '';
+  document.getElementById('inputSala').value = '';
+  document.getElementById('inputTecnico').value = '';
+  document.getElementById('notasInput').value = '';
+  document.getElementById('selectedError').classList.add('hidden');
+  document.getElementById('btnStart').classList.add('hidden');
+  showPhase('phaseSetup');
+  renderErrorRef();
+}
+
+let toastTimer;
+function showToast(msg, type='success') {
+  const toast = document.getElementById('toast');
+  const icon = document.getElementById('toastIcon');
+  const msgEl = document.getElementById('toastMsg');
+  const colors = { success: 'var(--success)', warn: 'var(--warn)', danger: 'var(--danger)' };
+  toast.style.borderColor = colors[type] || 'var(--border-bright)';
+  icon.textContent = type === 'success' ? '✓' : type === 'danger' ? '🚨' : '⚠';
+  msgEl.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
